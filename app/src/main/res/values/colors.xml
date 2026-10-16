@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vault_black">#0D1117</color>
+    <color name="vault_dark_surface">#161B22</color>
+    <color name="vault_green">#00C805</color>
+    <color name="white">#FFFFFF</color>
+</resources>

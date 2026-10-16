@@ -1,0 +1,15 @@
+# Android & Gradle
+.gradle/
+build/
+app/build/
+dist/
+*.apk
+
+# Keystores y firmas locales
+*.jks
+*.keystore
+local.properties
+
+# Configuración de entorno y secretos
+.env
+secrets.xml

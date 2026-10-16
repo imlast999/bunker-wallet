@@ -3,6 +3,7 @@ package com.cleanvault.wallet.data.remote.neon
 import com.cleanvault.wallet.data.model.Blockchain
 import com.cleanvault.wallet.data.model.ScheduledOrder
 import com.cleanvault.wallet.data.model.ScheduledOrderStatus
+import com.cleanvault.wallet.data.remote.BunkerBackendClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -35,7 +36,7 @@ interface NeonSyncRepository {
 }
 
 class NeonSyncRepositoryImpl(
-    private val neonClient: NeonDatabaseClient = NeonDatabaseClient()
+    private val backendClient: BunkerBackendClient = BunkerBackendClient()
 ) : NeonSyncRepository {
 
     override suspend fun syncUserProfile(
@@ -43,40 +44,51 @@ class NeonSyncRepositoryImpl(
         solanaAddress: String,
         experienceLevel: String
     ): Result<Boolean> = withContext(Dispatchers.IO) {
-        val query = """
-            INSERT INTO users (id, evm_address, solana_address, experience_level, updated_at)
-            VALUES (gen_random_uuid(), '$evmAddress', '$solanaAddress', '$experienceLevel', NOW())
-            ON CONFLICT (evm_address) 
-            DO UPDATE SET experience_level = EXCLUDED.experience_level, updated_at = NOW();
-        """.trimIndent()
-
-        val result = neonClient.executeQuery(query)
-        if (result.isSuccess) Result.success(true) else Result.failure(result.exceptionOrNull() ?: Exception("Neon sync failed"))
+        val result = backendClient.syncUser(
+            evmAddress = evmAddress,
+            solanaAddress = solanaAddress,
+            experienceLevel = experienceLevel
+        )
+        if (result.isSuccess) {
+            Result.success(true)
+        } else {
+            Result.failure(result.exceptionOrNull() ?: Exception("Backend user sync failed"))
+        }
     }
 
     override suspend fun syncScheduledOrder(
         order: ScheduledOrder,
         userAddress: String
     ): Result<Boolean> = withContext(Dispatchers.IO) {
-        val query = """
-            INSERT INTO scheduled_orders (
-                id, user_address, from_token, to_token, amount_in, estimated_out, trigger_epoch, status, created_at
-            ) VALUES (
-                '${order.id}', '$userAddress', '${order.fromTokenSymbol}', '${order.toTokenSymbol}',
-                ${order.amountIn}, ${order.estimatedAmountOut}, ${order.targetTriggerTime}, '${order.status.name}', NOW()
-            )
-            ON CONFLICT (id) DO UPDATE SET status = EXCLUDED.status;
-        """.trimIndent()
-
-        val result = neonClient.executeQuery(query)
-        if (result.isSuccess) Result.success(true) else Result.failure(result.exceptionOrNull() ?: Exception("Neon sync order failed"))
+        val result = backendClient.syncOrder(order, userAddress)
+        if (result.isSuccess) {
+            Result.success(true)
+        } else {
+            Result.failure(result.exceptionOrNull() ?: Exception("Backend order sync failed"))
+        }
     }
 
     override suspend fun fetchScheduledOrders(
         userAddress: String
     ): Result<List<ScheduledOrder>> = withContext(Dispatchers.IO) {
-        val query = "SELECT * FROM scheduled_orders WHERE user_address = '$userAddress' ORDER BY trigger_epoch ASC;"
-        val result = neonClient.executeQuery(query)
-        Result.success(emptyList())
+        val result = backendClient.fetchOrders(userAddress)
+        result.map { dtos ->
+            dtos.map { dto ->
+                ScheduledOrder(
+                    id = dto.id,
+                    fromTokenSymbol = dto.fromToken,
+                    fromTokenAddress = "",
+                    fromChain = try { Blockchain.valueOf(dto.chain) } catch (_: Exception) { Blockchain.SOLANA },
+                    toTokenSymbol = dto.toToken,
+                    toTokenAddress = "",
+                    toChain = try { Blockchain.valueOf(dto.chain) } catch (_: Exception) { Blockchain.SOLANA },
+                    amountIn = dto.amountIn,
+                    estimatedAmountOut = dto.amountIn,
+                    targetTriggerTime = dto.triggerEpoch,
+                    formattedTargetTime = "Scheduled",
+                    status = try { ScheduledOrderStatus.valueOf(dto.status) } catch (_: Exception) { ScheduledOrderStatus.PENDING }
+                )
+            }
+        }
     }
 }

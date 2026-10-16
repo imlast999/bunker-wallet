@@ -46,11 +46,14 @@ class CleanVaultApplication : Application() {
         private set
     lateinit var scheduledOrderRepository: ScheduledOrderRepository
         private set
+    lateinit var bunkerBackendClient: com.cleanvault.wallet.data.remote.BunkerBackendClient
+        private set
     lateinit var neonSyncRepository: com.cleanvault.wallet.data.remote.neon.NeonSyncRepository
         private set
 
     override fun onCreate() {
         super.onCreate()
+        bunkerBackendClient = com.cleanvault.wallet.data.remote.BunkerBackendClient()
         secureStorage = SecureStorage(this)
         biometricAuthHelper = BiometricAuthHelper(this)
         walletManager = WalletManager(this, secureStorage, biometricAuthHelper)
@@ -61,8 +64,8 @@ class CleanVaultApplication : Application() {
         portfolioRepository = PortfolioRepositoryImpl(whitelistRepository, priceService, balanceScannerService)
         swapRoutingService = SwapRoutingServiceImpl()
         marketHoursManager = MarketHoursManager()
-        scheduledOrderRepository = ScheduledOrderRepositoryImpl(this)
-        neonSyncRepository = com.cleanvault.wallet.data.remote.neon.NeonSyncRepositoryImpl()
+        scheduledOrderRepository = ScheduledOrderRepositoryImpl(this, bunkerBackendClient)
+        neonSyncRepository = com.cleanvault.wallet.data.remote.neon.NeonSyncRepositoryImpl(bunkerBackendClient)
 
         appScope.launch(Dispatchers.IO) {
             whitelistRepository.loadInitialWhitelist()

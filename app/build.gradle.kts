@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -19,6 +21,14 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val localProps = Properties()
+        val localPropsFile = rootProject.file("local.properties")
+        if (localPropsFile.exists()) {
+            localProps.load(localPropsFile.inputStream())
+        }
+        val backendUrl = localProps.getProperty("backend.api.url", "https://bunker-api.workers.dev")
+        buildConfigField("String", "BACKEND_API_URL", "\"$backendUrl\"")
     }
 
     buildTypes {
@@ -39,6 +49,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.11"

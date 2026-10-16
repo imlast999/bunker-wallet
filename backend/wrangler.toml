@@ -1,0 +1,12 @@
+name = "bunker-backend-api"
+main = "src/index.ts"
+compatibility_date = "2024-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Secret binding required:
+# Use: `npx wrangler secret put DATABASE_URL`
+# Value should be your Neon Postgres connection string, e.g.:
+# postgresql://user:password@ep-sample-pool-123456.us-east-2.aws.neon.tech/neondb?sslmode=require
+
+[vars]
+ENVIRONMENT = "production"

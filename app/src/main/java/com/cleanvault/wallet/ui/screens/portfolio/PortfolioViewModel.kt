@@ -62,6 +62,10 @@ class PortfolioViewModel(
             }
             val state = walletManager.vaultState.value
             portfolioRepository.refreshBalances(state.solanaAddress, state.evmAddress)
+            val addr = state.evmAddress.ifBlank { state.solanaAddress }
+            if (addr.isNotBlank()) {
+                scheduledOrderRepository?.syncRemoteOrders(addr)
+            }
         }
     }
 
@@ -69,6 +73,10 @@ class PortfolioViewModel(
         val state = walletManager.vaultState.value
         viewModelScope.launch {
             portfolioRepository.refreshBalances(state.solanaAddress, state.evmAddress)
+            val addr = state.evmAddress.ifBlank { state.solanaAddress }
+            if (addr.isNotBlank()) {
+                scheduledOrderRepository?.syncRemoteOrders(addr)
+            }
         }
     }
 

@@ -1,0 +1,34 @@
+{
+  "name": "bunker-backend-api",
+  "version": "1.0.0",
+  "description": "Serverless edge backend for CleanVault / Bunker RWA Wallet with Neon Postgres (Vercel & Cloudflare compatible)",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "types": "tsc --noEmit"
+  },
+  "keywords": [
+    "bunker",
+    "cleanvault",
+    "neon",
+    "postgres",
+    "vercel",
+    "cloudflare-worker",
+    "hono",
+    "rwa"
+  ],
+  "author": "CleanVault Team",
+  "license": "MIT",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.1",
+    "hono": "^4.2.7"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240405.0",
+    "@types/node": "^20.12.7",
+    "@vercel/node": "^3.2.0",
+    "typescript": "^5.4.5",
+    "wrangler": "^3.50.0"
+  }
+}
